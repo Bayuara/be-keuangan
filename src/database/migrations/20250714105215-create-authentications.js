@@ -15,7 +15,7 @@ module.exports = {
           key: "id",
         },
       },
-      token: {
+      refreshToken: {
         type: Sequelize.STRING,
       },
       createdAt: {

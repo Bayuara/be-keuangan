@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         references: { model: "users", key: "id" },
       },
-      token: DataTypes.STRING,
+      refreshToken: DataTypes.STRING,
     },
     {
       sequelize,

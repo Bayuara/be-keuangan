@@ -3,7 +3,8 @@ const {
   loginUser,
   registerUser,
   logoutUser,
-} = require("../services/authServices");
+  getAllUsers,
+} = require("../services/userServices");
 const { generateAccessToken } = require("../utils/token");
 const models = require("../database/models/authentications");
 const jwt = require("jsonwebtoken");
@@ -11,7 +12,8 @@ const jwt = require("jsonwebtoken");
 class UserController {
   static async getAllUsers(req, res) {
     try {
-      const data = await users.findAll();
+      const data = await getAllUsers();
+
       res.json({
         status: "Success",
         message: "Data retrieved successfully",
@@ -25,13 +27,13 @@ class UserController {
 
   static async register(req, res) {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password, username } = req.body;
 
-      if (!name || !email || !password) {
+      if (!name || !email || !password || !username) {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      const user = await registerUser({ name, email, password });
+      const user = await registerUser({ name, email, password, username });
 
       res.status(201).json({
         status: "Success",
@@ -40,6 +42,7 @@ class UserController {
           id: user.id,
           name: user.name,
           email: user.email,
+          username: user.username,
         },
       });
     } catch (error) {
@@ -50,18 +53,16 @@ class UserController {
 
   static async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
 
-      console.log(email, password);
-
-      if (!email || !password) {
+      if (!username || !password) {
         return res
           .status(400)
-          .json({ error: "Email and password are required" });
+          .json({ error: "username and password are required" });
       }
 
       const { user, accessToken, refreshToken } = await loginUser({
-        email,
+        username,
         password,
       });
 
@@ -73,7 +74,7 @@ class UserController {
         data: {
           id: user.id,
           name: user.name,
-          email: user.email,
+          username: user.username,
         },
       });
     } catch (error) {
@@ -98,37 +99,6 @@ class UserController {
       });
     } catch (error) {
       return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-
-  static async refreshToken(req, res) {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({ message: "Refresh token is required" });
-    }
-
-    try {
-      // Cek apakah token ada di DB
-      const stored = await models.findOne({
-        where: { refreshToken },
-      });
-      if (!stored) {
-        return res.status(403).json({ message: "Invalid refresh token" });
-      }
-
-      // Verifikasi token
-      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
-
-      const newAccessToken = generateAccessToken({ id: decoded.id });
-
-      return res.status(200).json({
-        accessToken: newAccessToken,
-      });
-    } catch (err) {
-      return res
-        .status(403)
-        .json({ message: "Invalid or expired refresh token" });
     }
   }
 }

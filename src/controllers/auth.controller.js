@@ -7,9 +7,6 @@ const {
   verifyRefreshToken,
 } = require("../utils/token");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-
 const refreshToken = async (req, res) => {
   const { refreshToken } = req.body || {};
 
@@ -30,9 +27,11 @@ const refreshToken = async (req, res) => {
     const newAccessToken = generateAccessToken({ id: decoded.id });
 
     return res.status(200).json({
+      message: "Token refreshed successfully",
       accessToken: newAccessToken,
     });
   } catch (err) {
+    console.error("Refresh token verification error:", err.message);
     return res
       .status(403)
       .json({ message: "Invalid or expired refresh token" });
