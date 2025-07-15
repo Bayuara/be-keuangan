@@ -4,7 +4,7 @@ const { users } = require("../database/models");
 const accessSecret = process.env.JWT_SECRET;
 const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-export function authenticate(req, res, next) {
+function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -22,7 +22,7 @@ export function authenticate(req, res, next) {
   }
 }
 
-export async function refreshToken(req, res) {
+async function refreshToken(req, res) {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -58,3 +58,5 @@ export async function refreshToken(req, res) {
     return res.status(403).json({ error: "Invalid refresh token" });
   }
 }
+
+module.exports = { authenticate, refreshToken };

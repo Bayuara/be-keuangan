@@ -11,10 +11,10 @@ const userRouter = express.Router();
 
 // Handle the /users endpoint
 
-router.post("/register", UserController.register);
-router.post("/login", UserController.login);
+userRouter.post("/register", UserController.register);
+userRouter.post("/login", UserController.login);
 userRouter.get("/", refreshToken, authenticate, UserController.getAllUsers);
 
 // Add more routes for the /users endpoint as needed
 
-export default userRouter;
+module.exports = userRouter;
