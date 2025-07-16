@@ -51,41 +51,21 @@ const getAccountByNameSequelize = async (userId, name) => {
 };
 
 const editAccountSequelize = async (userId, accountId, name, balance, type) => {
-  // return await accounts.update(
-  //   {
-  //     name,
-  //     balance,
-  //     type,
-  //     updatedAt: new Date(),
-  //   },
-  //   {
-  //     where: {
-  //       id: accountId,
-  //       userId: userId,
-  //     },
-  //     returning: true,
-  //   }
-  // );
-  try {
-    return await accounts.update(
-      {
-        name,
-        balance,
-        type,
-        updatedAt: new Date(),
+  return await accounts.update(
+    {
+      name,
+      balance,
+      type,
+      updatedAt: new Date(),
+    },
+    {
+      where: {
+        id: accountId,
+        userId: userId,
       },
-      {
-        where: {
-          id: accountId,
-          userId: userId,
-        },
-        returning: true,
-      }
-    );
-  } catch (error) {
-    console.error("Sequelize update error:", error);
-    throw error;
-  }
+      returning: true,
+    }
+  );
 };
 
 module.exports = {

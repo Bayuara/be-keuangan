@@ -20,7 +20,9 @@ class AccountController {
         .status(201);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -33,7 +35,9 @@ class AccountController {
         .status(201);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -53,7 +57,9 @@ class AccountController {
         .status(201);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -66,7 +72,9 @@ class AccountController {
         .status(201);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -79,7 +87,9 @@ class AccountController {
         .status(201);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -109,7 +119,9 @@ class AccountController {
         .json({ status: "Success", message: "Account updated", data });
     } catch (error) {
       logger.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 }

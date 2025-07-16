@@ -10,14 +10,16 @@ class UserController {
     try {
       const data = await getAllUsersSequelize();
 
-      res.json({
+      res.status(200).json({
         status: "Success",
         message: "Data retrieved successfully",
         data,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -25,10 +27,14 @@ class UserController {
     try {
       const userId = req.params.id;
       const user = await getUserByIdSequelize(userId);
-      res.json({ status: "Success", message: "Data retrieved", user });
+      res
+        .status(200)
+        .json({ status: "Success", message: "Data retrieved", user });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -59,7 +65,9 @@ class UserController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -78,7 +86,7 @@ class UserController {
         password,
       });
 
-      res.json({
+      res.status(200).json({
         status: "Success",
         message: "Login successful",
         accessToken,
@@ -91,7 +99,9 @@ class UserController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 
@@ -105,12 +115,14 @@ class UserController {
 
       await logoutUser(refreshToken);
 
-      return res.json({
+      return res.status(200).json({
         status: "Success",
         message: "Logged out successfully",
       });
     } catch (error) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res
+        .status(500)
+        .json({ message: error.message || "Internal Server Error" });
     }
   }
 }
