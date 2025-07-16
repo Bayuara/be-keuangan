@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
       },
       amount: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(15, 2),
       },
       description: {
         type: Sequelize.STRING,

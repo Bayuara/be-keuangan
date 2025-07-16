@@ -1,11 +1,21 @@
 const express = require("express");
+const morgan = require("morgan");
 const routes = require("./routes/index.js");
-const requestLogger = require("../src/middlewares/requestLogger.middleware.js");
+const logger = require("./utils/logger");
 
 const app = express();
-app.use(requestLogger);
+
+// logger
+app.use(
+  morgan("combined", {
+    stream: {
+      write: (message) => logger.http(message.trim()),
+    },
+  })
+);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/api", routes);
 
 app.use((req, res) => {

@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
   transactions.init(
     {
       type: DataTypes.STRING,
-      amount: DataTypes.FLOAT,
+      amount: DataTypes.DECIMAL,
       description: DataTypes.STRING,
       accountId: {
         type: DataTypes.INTEGER,

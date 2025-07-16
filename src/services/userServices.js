@@ -1,12 +1,11 @@
 const bcrypt = require("bcrypt");
 const models = require("../database/models");
 const { generateAccessToken, generateRefreshToken } = require("../utils/token");
-const e = require("express");
 
 const users = models.users;
 const authentications = models.authentications;
 
-const registerUser = async ({ name, email, password, username }) => {
+const registerUserSequelize = async ({ name, email, password, username }) => {
   const existingUser = await users.findOne({ where: { email } });
   if (existingUser) throw new Error("Email already registered");
 
@@ -22,7 +21,7 @@ const registerUser = async ({ name, email, password, username }) => {
   return newUser;
 };
 
-const loginUser = async ({ username, password }) => {
+const loginUserSequelize = async ({ username, password }) => {
   const user = await users.findOne({ where: { username } });
   if (!user) throw new Error("Invalid credentials");
 
@@ -33,33 +32,32 @@ const loginUser = async ({ username, password }) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
-  // Only 1 refreshToken per user (optional rule)
   await authentications.destroy({ where: { userId: user.id } });
   await authentications.create({ userId: user.id, refreshToken });
 
   return { user, accessToken, refreshToken };
 };
 
-const logoutUser = async (refreshToken) => {
+const logoutUserSequelize = async (refreshToken) => {
   await authentications.destroy({ where: { refreshToken } });
 };
 
-const getUserById = async (id) => {
+const getUserByIdSequelize = async (id) => {
   const user = await users.findByPk(id);
   if (!user) throw new Error("User not found");
   return user;
 };
 
-const getAllUsers = async () => {
+const getAllUsersSequelize = async () => {
   const result = await users.findAll();
   result.map((user) => (user.password = undefined));
   return result;
 };
 
 module.exports = {
-  registerUser,
-  loginUser,
-  logoutUser,
-  getUserById,
-  getAllUsers,
+  registerUserSequelize,
+  loginUserSequelize,
+  logoutUserSequelize,
+  getUserByIdSequelize,
+  getAllUsersSequelize,
 };

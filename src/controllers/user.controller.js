@@ -1,24 +1,31 @@
-const users = require("../database/models/users");
 const {
-  loginUser,
-  registerUser,
-  logoutUser,
-  getAllUsers,
+  loginUserSequelize,
+  registerUserSequelize,
+  logoutUserSequelize,
+  getAllUsersSequelize,
 } = require("../services/userServices");
-const { generateAccessToken } = require("../utils/token");
-const models = require("../database/models/authentications");
-const jwt = require("jsonwebtoken");
 
 class UserController {
   static async getAllUsers(req, res) {
     try {
-      const data = await getAllUsers();
+      const data = await getAllUsersSequelize();
 
       res.json({
         status: "Success",
         message: "Data retrieved successfully",
         data,
       });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  static async getUserById(req, res) {
+    try {
+      const userId = req.params.id;
+      const user = await getUserByIdSequelize(userId);
+      res.json({ status: "Success", message: "Data retrieved", user });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
@@ -33,7 +40,12 @@ class UserController {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      const user = await registerUser({ name, email, password, username });
+      const user = await registerUserSequelize({
+        name,
+        email,
+        password,
+        username,
+      });
 
       res.status(201).json({
         status: "Success",
@@ -61,7 +73,7 @@ class UserController {
           .json({ error: "username and password are required" });
       }
 
-      const { user, accessToken, refreshToken } = await loginUser({
+      const { user, accessToken, refreshToken } = await loginUserSequelize({
         username,
         password,
       });

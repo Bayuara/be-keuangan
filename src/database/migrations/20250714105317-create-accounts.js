@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       balance: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(15, 2),
       },
       type: {
         type: Sequelize.ENUM("bank", "cash", "ewallet", "investment"),

@@ -1,37 +1,31 @@
+const winston = require("winston");
 const path = require("path");
-const fs = require("fs");
-const { createLogger, format, transports } = require("winston");
 
-// Buat folder log jika belum ada
-const logDir = path.join(__dirname, "../logs");
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
-}
+const logFormat = winston.format.printf(
+  ({ level, message, timestamp, stack }) => {
+    return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
+  }
+);
 
-const logger = createLogger({
-  level: "info", // default: log semua info, warn, error
-  format: format.combine(
-    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    format.printf(
-      ({ timestamp, level, message }) =>
-        `[${timestamp}] [${level.toUpperCase()}] ${message}`
-    )
+const logger = winston.createLogger({
+  level: "info", // default level
+  format: winston.format.combine(
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.errors({ stack: true }), // log stack trace if exists
+    logFormat
   ),
   transports: [
-    // Simpan log ke file
-    new transports.File({ filename: path.join(logDir, "log.txt") }),
-
-    // Tampilkan ke console juga
-    new transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.printf(
-          ({ timestamp, level, message }) =>
-            `[${timestamp}] [${level}] ${message}`
-        )
-      ),
-    }),
+    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
+    new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
+
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), logFormat),
+    })
+  );
+}
 
 module.exports = logger;

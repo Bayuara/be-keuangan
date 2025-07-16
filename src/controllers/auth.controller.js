@@ -1,9 +1,6 @@
-const jwt = require("jsonwebtoken");
-const { authentications, users } = require("../database/models");
+const { authentications } = require("../database/models");
 const {
   generateAccessToken,
-  generateRefreshToken,
-  verifyAccessToken,
   verifyRefreshToken,
 } = require("../utils/token");
 
