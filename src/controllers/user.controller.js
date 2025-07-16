@@ -16,7 +16,7 @@ class UserController {
         data,
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       res
         .status(500)
         .json({ message: error.message || "Internal Server Error" });
@@ -31,7 +31,7 @@ class UserController {
         .status(200)
         .json({ status: "Success", message: "Data retrieved", user });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       res
         .status(500)
         .json({ message: error.message || "Internal Server Error" });
@@ -64,7 +64,7 @@ class UserController {
         },
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       res
         .status(500)
         .json({ message: error.message || "Internal Server Error" });
@@ -98,7 +98,7 @@ class UserController {
         },
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       res
         .status(500)
         .json({ message: error.message || "Internal Server Error" });
@@ -120,6 +120,7 @@ class UserController {
         message: "Logged out successfully",
       });
     } catch (error) {
+      logger.error(error);
       return res
         .status(500)
         .json({ message: error.message || "Internal Server Error" });

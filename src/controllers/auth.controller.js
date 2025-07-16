@@ -3,6 +3,7 @@ const {
   generateAccessToken,
   verifyRefreshToken,
 } = require("../utils/token");
+const logger = require("../utils/logger");
 
 const refreshToken = async (req, res) => {
   const { refreshToken } = req.body || {};
@@ -28,7 +29,7 @@ const refreshToken = async (req, res) => {
       accessToken: newAccessToken,
     });
   } catch (err) {
-    console.error("Refresh token verification error:", err.message);
+    logger.error("Refresh token verification error:", err.message);
     return res
       .status(403)
       .json({ message: "Invalid or expired refresh token" });

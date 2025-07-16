@@ -97,9 +97,6 @@ class AccountController {
     const { accountId } = req.params;
     const { name, balance, type, userId } = req.body;
 
-    console.log("accountId:", accountId);
-    console.log("Payload:", { name, balance, type, userId });
-
     try {
       const verifyAccount = await getAccountSequelize(accountId, userId);
 
