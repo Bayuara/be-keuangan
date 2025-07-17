@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const { users } = require("../database/models");
 
 const accessSecret = process.env.JWT_SECRET;
 

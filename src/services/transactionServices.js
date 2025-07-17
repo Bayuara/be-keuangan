@@ -1,6 +1,6 @@
-const { where } = require("sequelize");
 const models = require("../database/models");
-const { sequelize, transactions, accounts, categories, users } = models;
+const { sequelize, transactions, accounts, categories, users, historyLogs } =
+  models;
 
 const getAllTransactionsSequelize = async (userId) => {
   const result = await transactions.findAll({ where: { userId } });
@@ -23,7 +23,35 @@ const createTransactionSequelize = async (
   isAccounted = false
 ) => {
   const result = await sequelize.transaction(async (t) => {
-    await transactions.create(
+    const currentAccount = await accounts.findOne({
+      where: { id: accountId },
+      transaction: t,
+    });
+
+    if (!currentAccount) {
+      throw new Error("Account not found");
+    }
+
+    const previousBalance = currentAccount.balance;
+    let newBalance = previousBalance;
+
+    if (isAccounted) {
+      if (type === "income") {
+        await accounts.increment(
+          { balance: amount },
+          { where: { id: accountId }, transaction: t }
+        );
+        newBalance = previousBalance + amount;
+      } else {
+        await accounts.decrement(
+          { balance: amount },
+          { where: { id: accountId }, transaction: t }
+        );
+        newBalance = previousBalance - amount;
+      }
+    }
+
+    const transactionResult = await transactions.create(
       {
         type,
         amount,
@@ -37,25 +65,20 @@ const createTransactionSequelize = async (
       { transaction: t }
     );
 
-    if (isAccounted) {
-      const findAccount = await account.findByPk(accountId);
-
-      if (!findAccount) {
-        throw new Error("Account not found");
-      }
-
-      type === "income"
-        ? await accounts.increment(
-            { balance: amount },
-            { where: { id: accountId }, transaction: t }
-          )
-        : await accounts.decrement(
-            { balance: amount },
-            { where: { id: accountId }, transaction: t }
-          );
-    }
-    return result;
+    await historyLogs.create(
+      {
+        accountId,
+        transactionId: transactionResult.id,
+        previousBalance: previousBalance,
+        changedAmount: type === "income" ? amount : -amount,
+        newBalance: newBalance,
+        type,
+      },
+      { transaction: t }
+    );
+    return transactionResult;
   });
+  return result;
 };
 
 const updateTransactionSequelize = async (
@@ -91,11 +114,11 @@ const updateTransactionSequelize = async (
       }
 
       type === "income"
-        ? await accounts.increment(
+        ? await models.accounts.increment(
             { balance: amount },
             { where: { id: accountId }, transaction: t }
           )
-        : await accounts.decrement(
+        : await models.accounts.decrement(
             { balance: -amount },
             { where: { id: accountId }, transaction: t }
           );

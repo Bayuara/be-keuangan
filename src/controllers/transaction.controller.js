@@ -6,7 +6,7 @@ const {
   updateTransactionSequelize,
 } = require("../services/transactionServices");
 const { getUserByIdSequelize } = require("../services/userServices");
-const { getAccountSequelize } = require("../services/accountServices");
+const { getAccountByIdSequelize } = require("../services/accountServices");
 const logger = require("../utils/logger");
 
 class TransactionController {
@@ -55,21 +55,21 @@ class TransactionController {
       categoryId,
       accountId,
       date,
-      isAccounted,
+      isAccounted = false,
     } = req.body;
     const { userId } = req.body;
     try {
       const verifyUser = await getUserByIdSequelize(userId);
-
       if (!verifyUser || verifyUser.id !== userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const verifyAccount = await getAccountSequelize(accountId, userId);
-
+      const verifyAccount = await getAccountByIdSequelize(accountId);
       if (!verifyAccount) {
         return res.status(401).json({ error: "Money account not found" });
       }
+
+      const changedIsAccounted = accountId ? true : false;
 
       const data = await createTransactionSequelize(
         type,
@@ -79,7 +79,7 @@ class TransactionController {
         accountId,
         userId,
         date,
-        (isAccounted = false)
+        changedIsAccounted
       );
       res
         .status(201)

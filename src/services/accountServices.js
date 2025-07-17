@@ -21,6 +21,10 @@ const getAllAccountsSequelize = async (userId) => {
   });
 };
 
+const getAccountByIdSequelize = async (accountId) => {
+  return await accounts.findByPk(accountId);
+};
+
 const getAccountSequelize = async (accountId, userId) => {
   return await accounts.findOne({
     where: {
@@ -75,4 +79,5 @@ module.exports = {
   getAcountByTypeSequelize,
   getAccountByNameSequelize,
   editAccountSequelize,
+  getAccountByIdSequelize,
 };

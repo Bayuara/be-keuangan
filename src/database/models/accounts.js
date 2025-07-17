@@ -14,8 +14,13 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       accounts.hasMany(models.transactions, {
-        foreignKey: "accountId", // foreign key di table transactions
+        foreignKey: "accountId",
         as: "transactions",
+      });
+
+      accounts.hasMany(models.historyLogs, {
+        foreignKey: "accountId",
+        as: "historyLogs",
       });
     }
   }

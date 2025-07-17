@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "categoryId",
         as: "category",
       });
+      transactions.hasMany(models.historyLogs, {
+        foreignKey: "transactionId",
+        as: "transaction",
+      });
     }
   }
   transactions.init(
