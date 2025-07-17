@@ -89,9 +89,51 @@ const updateTransactionSequelize = async (
   accountId,
   userId,
   date,
-  isAccounted = false
+  isAccounted = false,
+  transactionId // ID transaksi yang akan diupdate
 ) => {
-  const result = await sequelize.transactions(async (t) => {
+  const result = await sequelize.transaction(async (t) => {
+    // Dapatkan transaksi yang akan diupdate
+    const existingTransaction = await transactions.findOne({
+      where: { id: transactionId },
+      transaction: t,
+    });
+
+    if (!existingTransaction) {
+      throw new Error("Transaction not found");
+    }
+
+    // Dapatkan account saat ini
+    const currentAccount = await accounts.findOne({
+      where: { id: accountId },
+      transaction: t,
+    });
+
+    if (!currentAccount) {
+      throw new Error("Account not found");
+    }
+
+    let previousBalance = currentAccount.balance;
+    let newBalance = previousBalance;
+
+    // Jika transaksi lama sudah di-account, kembalikan dulu balance-nya
+    if (existingTransaction.isAccounted) {
+      if (existingTransaction.type === "income") {
+        await accounts.decrement(
+          { balance: existingTransaction.amount },
+          { where: { id: existingTransaction.accountId }, transaction: t }
+        );
+        previousBalance = previousBalance - existingTransaction.amount;
+      } else {
+        await accounts.increment(
+          { balance: existingTransaction.amount },
+          { where: { id: existingTransaction.accountId }, transaction: t }
+        );
+        previousBalance = previousBalance + existingTransaction.amount;
+      }
+    }
+
+    // Update transaksi
     await transactions.update(
       {
         type,
@@ -103,56 +145,160 @@ const updateTransactionSequelize = async (
         date,
         isAccounted,
       },
+      {
+        where: { id: transactionId },
+        transaction: t,
+      }
+    );
+
+    // Terapkan balance baru jika isAccounted = true
+    newBalance = previousBalance;
+    if (isAccounted) {
+      if (type === "income") {
+        await accounts.increment(
+          { balance: amount },
+          { where: { id: accountId }, transaction: t }
+        );
+        newBalance = previousBalance + amount;
+      } else {
+        await accounts.decrement(
+          { balance: amount },
+          { where: { id: accountId }, transaction: t }
+        );
+        newBalance = previousBalance - amount;
+      }
+    }
+
+    // Buat history log untuk update
+    await historyLogs.create(
+      {
+        accountId,
+        transactionId: transactionId,
+        previousBalance: previousBalance,
+        changedAmount: type === "income" ? amount : -amount,
+        newBalance: newBalance,
+        type,
+      },
       { transaction: t }
     );
 
-    if (isAccounted) {
-      const findAccount = await accounts.findByPk(accountId);
+    // Return updated transaction
+    const updatedTransaction = await transactions.findOne({
+      where: { id: transactionId },
+      transaction: t,
+    });
 
-      if (!findAccount) {
-        throw new Error("Account not found");
-      }
-
-      type === "income"
-        ? await models.accounts.increment(
-            { balance: amount },
-            { where: { id: accountId }, transaction: t }
-          )
-        : await models.accounts.decrement(
-            { balance: -amount },
-            { where: { id: accountId }, transaction: t }
-          );
-    }
-    return result;
+    return updatedTransaction;
   });
+
+  return result;
 };
 
-const deleteTransactionSequelize = async (
-  transactionId,
-  accountId,
-  amount,
-  isAccounted
-) => {
+// const deleteTransactionSequelize = async (
+//   transactionId,
+//   accountId,
+//   amount,
+//   isAccounted
+// ) => {
+//   const result = await sequelize.transaction(async (t) => {
+//     if (isAccounted) {
+//       const findAccount = await accounts.findByPk(accountId);
+
+//       if (!findAccount) {
+//         throw new Error("Account not found");
+//       }
+
+//       type === "income"
+//         ? await accounts.increment(
+//             { balance: amount },
+//             { where: { id: accountId }, transaction: t }
+//           )
+//         : await accounts.decrement(
+//             { balance: amount },
+//             { where: { id: accountId }, transaction: t }
+//           );
+//     }
+
+//     await transactions.destroy({ where: { transactionId }, transaction: t });
+//   });
+
+//   return result;
+// };
+
+const deleteTransactionSequelize = async (transactionId) => {
   const result = await sequelize.transaction(async (t) => {
-    if (isAccounted) {
-      const findAccount = await accounts.findByPk(accountId);
+    // Dapatkan transaksi yang akan dihapus
+    const existingTransaction = await transactions.findOne({
+      where: { id: transactionId },
+      transaction: t,
+    });
 
-      if (!findAccount) {
-        throw new Error("Account not found");
-      }
-
-      type === "income"
-        ? await accounts.increment(
-            { balance: amount },
-            { where: { id: accountId }, transaction: t }
-          )
-        : await accounts.decrement(
-            { balance: amount },
-            { where: { id: accountId }, transaction: t }
-          );
+    if (!existingTransaction) {
+      throw new Error("Transaction not found");
     }
 
-    await transactions.destroy({ where: { transactionId }, transaction: t });
+    // Dapatkan account terkait
+    const currentAccount = await accounts.findOne({
+      where: { id: existingTransaction.accountId },
+      transaction: t,
+    });
+
+    if (!currentAccount) {
+      throw new Error("Account not found");
+    }
+
+    let previousBalance = currentAccount.balance;
+    let newBalance = previousBalance;
+
+    if (existingTransaction.isAccounted) {
+      if (existingTransaction.type === "income") {
+        // income dihapus, kurangi balance
+        await accounts.decrement(
+          { balance: existingTransaction.amount },
+          { where: { id: existingTransaction.accountId }, transaction: t }
+        );
+        newBalance = previousBalance - existingTransaction.amount;
+      } else {
+        await accounts.increment(
+          { balance: existingTransaction.amount },
+          { where: { id: existingTransaction.accountId }, transaction: t }
+        );
+        newBalance = previousBalance + existingTransaction.amount;
+      }
+    }
+
+    // Buat history log untuk penghapusan
+    await historyLogs.create(
+      {
+        accountId: existingTransaction.accountId,
+        transactionId: transactionId,
+        previousBalance: previousBalance,
+        changedAmount:
+          existingTransaction.type === "income"
+            ? -existingTransaction.amount
+            : existingTransaction.amount,
+        newBalance: newBalance,
+        type: `deleted_${existingTransaction.type}`,
+      },
+      { transaction: t }
+    );
+
+    // Hapus transaksi
+    const deletedCount = await transactions.destroy({
+      where: { id: transactionId },
+      transaction: t,
+    });
+
+    if (deletedCount === 0) {
+      throw new Error("Failed to delete transaction");
+    }
+
+    return {
+      deleted: true,
+      transactionId: transactionId,
+      accountId: existingTransaction.accountId,
+      balanceChange: newBalance - previousBalance,
+    };
   });
 
   return result;

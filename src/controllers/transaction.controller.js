@@ -100,18 +100,17 @@ class TransactionController {
       categoryId,
       accountId,
       date,
-      isAccounted,
+      isAccounted = false,
+      transactionId,
     } = req.body;
     const { userId } = req.body;
     try {
       const verifyUser = await getUserByIdSequelize(userId);
-
       if (!verifyUser || verifyUser.id !== userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const verifyAccount = await getAccountSequelize(accountId, userId);
-
+      const verifyAccount = await getAccountByIdSequelize(accountId);
       if (!verifyAccount) {
         return res.status(401).json({ error: "Money account not found" });
       }
@@ -124,6 +123,8 @@ class TransactionController {
         return res.status(401).json({ error: "Transaction not found" });
       }
 
+      const changedIsAccounted = accountId ? true : false;
+
       const data = await updateTransactionSequelize(
         type,
         amount,
@@ -132,7 +133,8 @@ class TransactionController {
         accountId,
         userId,
         date,
-        (isAccounted = false)
+        changedIsAccounted,
+        transactionId
       );
       res
         .status(200)
@@ -146,15 +148,15 @@ class TransactionController {
   }
 
   static async deleteTransaction(req, res) {
-    const { transactionId, accountId } = req.params;
-    const { userId } = req.body;
+    const { transactionId } = req.params;
+    const { userId, accountId } = req.body;
     try {
       const verifyUser = await getUserByIdSequelize(userId);
       if (!verifyUser || verifyUser.id !== userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const verifyAccount = await getAccountSequelize(accountId, userId);
+      const verifyAccount = await getAccountByIdSequelize(accountId, userId);
       if (!verifyAccount) {
         return res.status(401).json({ error: "Money account not found" });
       }
@@ -168,9 +170,9 @@ class TransactionController {
       }
 
       const data = await deleteTransactionSequelize(
-        transactionId,
-        accountId,
-        userId
+        transactionId
+        // accountId,
+        // userId
       );
       res
         .status(200)
