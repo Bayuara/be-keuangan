@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const models = require("../database/models");
 
 const categories = models.categories;
@@ -13,7 +14,13 @@ const getCategoryByIdSequelize = async (id) => {
 };
 
 const getCategoryByNameSequelize = async (name) => {
-  const category = await categories.findOne({ where: { name } });
+  const category = await categories.findOne({
+    where: {
+      name: {
+        [Op.iLike]: `%${name}%`,
+      },
+    },
+  });
   return category;
 };
 

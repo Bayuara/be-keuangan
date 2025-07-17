@@ -25,7 +25,7 @@ const getCategoryById = async (req, res) => {
 
 const getCategoryByName = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name } = req.params;
     const category = await getCategoryByNameSequelize(name);
     res.status(200).json(category);
   } catch (error) {
